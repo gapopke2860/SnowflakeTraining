@@ -86,12 +86,19 @@ def main():
 
     # Display the number of pages to the user
     st.text(f"Number of pages: {n_pages}")
-    
-    # Paginate the filtered DataFrame
-    for i, row in paginator("Page", df_filtered.iterrows()):
-        if i >= rows:
-            break
-        st.write(row[1])  # Display the row data
+
+    # Get the starting index of the rows to display
+    start_index = (page_number - 1) * rows
+
+    # Get the ending index of the rows to display
+    end_index = start_index + rows
+
+    # Paginate the filtered DataFrame based on the selected number of rows and page number
+    paginated_df = df_filtered.iloc[start_index:end_index]
+
+    # Display the paginated DataFrame
+    for i, row in paginated_df.iterrows():
+        st.write(row)  # Display the row data
 
     st.text('🥑🍞 Avocado Toast')
 
