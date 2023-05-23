@@ -89,12 +89,13 @@ def compare_cars(selected_cars):
 
     if len(selected_cars) > 1 and len(selected_cars) <= 4:
         # Create a DataFrame from the selected cars list
-        comparison_df = pd.DataFrame(selected_cars)
+        comparison_df = pd.concat(selected_cars, axis=1)
         st.subheader("Comparison Result")
-        st.dataframe(comparison_df)
+        st.table(comparison_df)
 
     elif len(selected_cars) > 4:
         st.warning("Please select up to 4 cars for comparison.")
+
 
 def main():
     con = sf.connect(
