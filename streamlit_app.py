@@ -61,6 +61,7 @@ def filters(df):
         df_filtered = df
 
     return df_filtered
+
 def select_cars(df):
     st.header("Select Cars")
 
@@ -76,8 +77,8 @@ def select_cars(df):
             # Add the selected car to the compare cars list
             selected_cars.append(row)
 
-        # Display the row data
-        st.write(row)
+        # Display the row data in a table
+        st.table(row)
 
     return selected_cars
 
