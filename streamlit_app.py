@@ -77,13 +77,10 @@ def select_cars(df):
             # Add the selected car to the compare cars list
             selected_cars.append(row)
 
-        # Convert the row into a DataFrame, transpose it, convert to markdown and display
-        row_df = pd.DataFrame(row).T
-        row_markdown = row_df.to_markdown()
-        st.markdown(row_markdown)
+        # Display the row data
+        st.write(row)
 
     return selected_cars
-
 
 
 
