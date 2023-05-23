@@ -64,16 +64,15 @@ def filters(df):
     return df_filtered
 
 
-def compare_cars(df):
+def compare_cars(selected_cars):
     st.header("Compare Cars")
 
-    cars_to_compare = st.multiselect("Select cars to compare (up to 4)", df.columns, default=[])
-
-    if len(cars_to_compare) > 1 and len(cars_to_compare) <= 4:
-        comparison_df = df[cars_to_compare]
+    if len(selected_cars) > 1 and len(selected_cars) <= 4:
+        # Create a DataFrame from the selected cars list
+        comparison_df = pd.DataFrame(selected_cars)
         st.subheader("Comparison Result")
         st.dataframe(comparison_df)
-    elif len(cars_to_compare) > 4:
+    elif len(selected_cars) > 4:
         st.warning("Please select up to 4 cars for comparison.")
 
 
@@ -156,13 +155,13 @@ def main():
     paginated_df = df_filtered.iloc[start_index:end_index]
 
     # Display the paginated DataFrame
+    selected_cars = []  # Empty list to store selected car records
     for i, row in paginated_df.iterrows():
         # Add a checkbox for each record
         selected = st.checkbox("", key=f"car_{i}")
         if selected:
             # Add the selected car to the compare cars list
-            # Do whatever you want with the selected car, such as storing it in a list or DataFrame
-            pass
+            selected_cars.append(row)
 
         # Display the row data
         st.write(row)
