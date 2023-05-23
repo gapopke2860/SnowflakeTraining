@@ -45,16 +45,32 @@ def main():
     if apply_filters:
         # Let user define filtering conditions
         with st.expander("Filter conditions", expanded=True):
-            price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())))
-            mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())))
-            transmission = st.selectbox("Transmission type", [""] + df["TRANSMISSION"].unique())
-            fuel_type = st.selectbox("Fuel type", [""] + df["FUEL_TYPE"].unique())
+            price_active = st.checkbox("Price range")
+            price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())), key="price_range")
+
+            mpg_active = st.checkbox("MPG range")
+            mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())), key="mpg_range")
+
+            transmission_active = st.checkbox("Transmission type")
+            transmission = st.selectbox("Transmission type", [""] + df["TRANSMISSION"].unique(), key="transmission")
+
+            fuel_type_active = st.checkbox("Fuel type")
+            fuel_type = st.selectbox("Fuel type", [""] + df["FUEL_TYPE"].unique(), key="fuel_type")
 
         # Filter data based on user's conditions
-        df_filtered = df[(df["PRICE"].between(*price_range)) & 
-                         (df["MPG"].between(*mpg_range)) & 
-                         (df["TRANSMISSION"].isin([transmission, ""])) &
-                         (df["FUEL_TYPE"].isin([fuel_type, ""]))]
+        df_filtered = df
+
+        if price_active:
+            df_filtered = df_filtered[(df_filtered["PRICE"].between(*price_range))]
+
+        if mpg_active:
+            df_filtered = df_filtered[(df_filtered["MPG"].between(*mpg_range))]
+
+        if transmission_active:
+            df_filtered = df_filtered[(df_filtered["TRANSMISSION"].isin([transmission, ""]))]
+
+        if fuel_type_active:
+            df_filtered = df_filtered[(df_filtered["FUEL_TYPE"].isin([fuel_type, ""]))]
 
         # Display the number of cars in the current selection
         st.text(f"Number of cars in the selection: {len(df_filtered)}")
