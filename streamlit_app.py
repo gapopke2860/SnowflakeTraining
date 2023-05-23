@@ -2,11 +2,24 @@ import streamlit
 import pandas
 import snowflake.connector
 
+con = connect(
+    user=st.secrets["snowflake"]["user"],
+    password=st.secrets["snowflake"]["password"],
+    account=st.secrets["snowflake"]["account"],
+    warehouse=st.secrets["snowflake"]["warehouse"],
+    database=st.secrets["snowflake"]["database"],
+    schema=st.secrets["snowflake"]["schema"]
+)
+
 streamlit.title('My Parents New Healthy Diner')
 
 streamlit.header('Breakfast Menu')
 
-streamlit.text('🥣Omega 3 & Blueberry Oatmeal\n🥗Kale, Spinach & Rocket Smoothie\n🐔Hard-Boiled Free-Range Egg')
+query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT 50"
+df = pd.read_sql_query(query, con)
+
+# Display the DataFrame in the Streamlit app
+st.dataframe(df)
 
 streamlit.text('🥑🍞 Avocado Toast')
 
