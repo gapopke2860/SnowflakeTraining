@@ -18,8 +18,15 @@ st.header('Breakfast Menu')
 query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT 50"
 df = pd.read_sql_query(query, con)
 
+# Let user select columns
+features = df.columns.tolist()
+features_selected = st.multiselect("Select car features: ", features, default=features)
+
+# Filter dataframe based on selected columns
+df_filtered = df[features_selected]
+
 # Display the DataFrame in the Streamlit app
-st.dataframe(df)
+st.dataframe(df_filtered)
 
 st.text('🥑🍞 Avocado Toast')
 
