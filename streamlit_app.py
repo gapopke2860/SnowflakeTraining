@@ -19,19 +19,20 @@ query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT 50"
 df = pd.read_sql_query(query, con)
 
 # Let user define filtering conditions
-price_range = st.slider("Price range", float(df["price"].min()), float(df["price"].max()), (float(df["price"].min()), float(df["price"].max())))
-mpg_range = st.slider("MPG range", float(df["mpg"].min()), float(df["mpg"].max()), (float(df["mpg"].min()), float(df["mpg"].max())))
-transmission = st.selectbox("Transmission type", df["transmission"].unique())
-fuel_type = st.selectbox("Fuel type", df["fuel_type"].unique())
+price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())))
+mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())))
+transmission = st.selectbox("Transmission type", df["TRANSMISSION"].unique())
+fuel_type = st.selectbox("Fuel type", df["FUEL_TYPE"].unique())
 
 # Filter data based on user's conditions
-df_filtered = df[(df["price"].between(*price_range)) & 
-                 (df["mpg"].between(*mpg_range)) & 
-                 (df["transmission"] == transmission) &
-                 (df["fuel_type"] == fuel_type)]
+df_filtered = df[(df["PRICE"].between(*price_range)) & 
+                 (df["MPG"].between(*mpg_range)) & 
+                 (df["TRANSMISSION"] == transmission) &
+                 (df["FUEL_TYPE"] == fuel_type)]
 
 # Display the filtered DataFrame
 st.dataframe(df_filtered)
+
 st.text('🥑🍞 Avocado Toast')
 
 st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
