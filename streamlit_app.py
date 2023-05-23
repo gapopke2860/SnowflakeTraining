@@ -88,6 +88,9 @@ def main():
     st.text(f"Number of pages: {n_pages}")
 
     # Get the starting index of the rows to display
+    page_number = st.number_input("Page number", min_value=1, max_value=n_pages, value=1, step=1)  # Add this line
+    
+    # Get the starting index of the rows to display
     start_index = (page_number - 1) * rows
 
     # Get the ending index of the rows to display
