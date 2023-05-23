@@ -131,9 +131,10 @@ def main():
     # Compare Cars section
     st.header("Compare Cars")
 
-    cars_to_compare = st.multiselect("Select cars to compare (up to 4)", df['CAR_NAME'], default=[])
+    cars_to_compare = st.multiselect("Select cars to compare (up to 4)", df.columns, default=[])
+
     if len(cars_to_compare) > 1 and len(cars_to_compare) <= 4:
-        comparison_df = df[df['CAR_NAME'].isin(cars_to_compare)]
+        comparison_df = df[cars_to_compare]
         st.subheader("Comparison Result")
         st.dataframe(comparison_df)
     elif len(cars_to_compare) > 4:
