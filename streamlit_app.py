@@ -103,7 +103,44 @@ def main():
     query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
     df = pd.read_sql_query(query, con)
 
-    df_filtered = filters(df)  # Apply filters and get the filtered DataFrame
+    # Let user decide whether to apply filtering conditions
+    apply_filters = st.checkbox("Apply Filters")
+
+    if apply_filters:
+        # Let user define filtering conditions
+        with st.expander("Filter conditions", expanded=True):
+            price_active = st.checkbox("Price range")
+            price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())), key="price_range")
+
+            mpg_active = st.checkbox("MPG range")
+            mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())), key="mpg_range")
+
+            transmission_active = st.checkbox("Transmission type")
+            transmission = st.selectbox("Transmission type", [""] + df["TRANSMISSION"].unique(), key="transmission")
+
+            fuel_type_active = st.checkbox("Fuel type")
+            fuel_type = st.selectbox("Fuel type", [""] + df["FUEL_TYPE"].unique(), key="fuel_type")
+
+        # Filter data based on user's conditions
+        df_filtered = df
+
+        if price_active:
+            df_filtered = df_filtered[(df_filtered["PRICE"].between(*price_range))]
+
+        if mpg_active:
+            df_filtered = df_filtered[(df_filtered["MPG"].between(*mpg_range))]
+
+        if transmission_active:
+            df_filtered = df_filtered[(df_filtered["TRANSMISSION"].isin([transmission, ""]))]
+
+        if fuel_type_active:
+            df_filtered = df_filtered[(df_filtered["FUEL_TYPE"].isin([fuel_type, ""]))]
+
+        # Display the number of cars in the current selection
+        st.text(f"Number of cars in the selection: {len(df_filtered)}")
+
+    else:
+        df_filtered = df
 
     # Get the number of rows to display from user
     rows = st.number_input("Number of rows to display", min_value=10, max_value=len(df_filtered), value=10, step=10)
@@ -114,22 +151,35 @@ def main():
     # Display the number of pages to the user
     st.text(f"Number of pages: {n_pages}")
 
-    # Get the starting index of the rows to display
-    page_number = st.number_input("Page number", min_value=1, max_value=n_pages, value=1, step=1)
+    # Add a button to show the available cars
+    if st.button("Click here to see the available cars"):
+        # Get the starting index of the rows to display
+        page_number = st.number_input("Page number", min_value=1, max_value=n_pages, value=1, step=1)
 
-    # Get the starting index of the rows to display
-    start_index = (page_number - 1) * rows
+        # Get the starting index of the rows to display
+        start_index = (page_number - 1) * rows
 
-    # Get the ending index of the rows to display
-    end_index = start_index + rows
+        # Get the ending index of the rows to display
+        end_index = start_index + rows
 
-    # Paginate the filtered DataFrame based on the selected number of rows and page number
-    paginated_df = df_filtered.iloc[start_index:end_index]
+        # Paginate the filtered DataFrame based on the selected number of rows and page number
+        paginated_df = df_filtered.iloc[start_index:end_index]
 
-    # Display the paginated DataFrame
-    for i, row in paginated_df.iterrows():
-        st.write(row)  # Display the row data
+        # Display the paginated DataFrame
+        for i, row in paginated_df.iterrows():
+            # Add a checkbox for each record
+            selected = st.checkbox("", key=f"car_{i}")
+            if selected:
+                # Add the selected car to the compare cars list
+                # Do whatever you want with the selected car, such as storing it in a list or DataFrame
+                pass
 
+            # Display the row data
+            st.write(row)
+
+    st.text('🥑🍞 Avocado Toast')
+
+    st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
     st.text('🥑🍞 Avocado Toast')
 
     st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
