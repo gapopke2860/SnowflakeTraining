@@ -87,6 +87,9 @@ def main():
     # Display the number of pages to the user
     st.text(f"Number of pages: {n_pages}")
 
+    # Get the page number from the user
+    page_number = st.sidebar.selectbox("Page number", range(1, n_pages+1))
+
     # Get the starting index of the rows to display
     start_index = (page_number - 1) * rows
 
