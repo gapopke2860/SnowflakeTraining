@@ -143,36 +143,33 @@ def main():
     # Display the number of pages to the user
     st.text(f"Number of pages: {n_pages}")
 
-    # Add a button to show the available cars
-    if st.button("Click here to see the available cars"):
-        # Get the starting index of the rows to display
-        page_number = st.number_input("Page number", min_value=1, max_value=n_pages, value=1, step=1)
+    # Get the starting index of the rows to display
+    page_number = st.number_input("Page number", min_value=1, max_value=n_pages, value=1, step=1)
 
-        # Get the starting index of the rows to display
-        start_index = (page_number - 1) * rows
+    # Get the starting index of the rows to display
+    start_index = (page_number - 1) * rows
 
-        # Get the ending index of the rows to display
-        end_index = start_index + rows
+    # Get the ending index of the rows to display
+    end_index = start_index + rows
 
-        # Paginate the filtered DataFrame based on the selected number of rows and page number
-        paginated_df = df_filtered.iloc[start_index:end_index]
+    # Paginate the filtered DataFrame based on the selected number of rows and page number
+    paginated_df = df_filtered.iloc[start_index:end_index]
 
-        # Display the paginated DataFrame
-        for i, row in paginated_df.iterrows():
-            # Add a checkbox for each record
-            selected = st.checkbox("", key=f"car_{i}")
-            if selected:
-                # Add the selected car to the compare cars list
-                # Do whatever you want with the selected car, such as storing it in a list or DataFrame
-                pass
+    # Display the paginated DataFrame
+    for i, row in paginated_df.iterrows():
+        # Add a checkbox for each record
+        selected = st.checkbox("", key=f"car_{i}")
+        if selected:
+            # Add the selected car to the compare cars list
+            # Do whatever you want with the selected car, such as storing it in a list or DataFrame
+            pass
 
-            # Display the row data
-            st.write(row)
+        # Display the row data
+        st.write(row)
 
     st.text('🥑🍞 Avocado Toast')
 
     st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
-    st.text('🥑🍞 Avocado Toast')
 
     st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
 
