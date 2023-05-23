@@ -1,64 +1,76 @@
 import streamlit as st
 import pandas as pd
 import snowflake.connector as sf
-import itertools
 
-# Define the paginator function
-def paginator(label, items, items_per_page=10, on_sidebar=True):
-    """Lets the user paginate a set of items."""
-    if on_sidebar:
-        location = st.sidebar.empty()
-    else:
-        location = st.empty()
+con = sf.connect(
+    user=st.secrets["snowflake"]["user"],
+    password=st.secrets["snowflake"]["password"],
+    account=st.secrets["snowflake"]["account"],
+    warehouse=st.secrets["snowflake"]["warehouse"],
+    database=st.secrets["snowflake"]["database"],
+    schema=st.secrets["snowflake"]["schema"]
+)
 
-    items = list(items)
-    n_pages = (len(items) - 1) // items_per_page + 1
-    page_format_func = lambda i: f"Page {i+1}"
-    page_number = location.selectbox(label, range(n_pages), format_func=page_format_func)
+st.title('My Parents New Healthy Diner')
 
-    min_index = page_number * items_per_page
-    max_index = min_index + items_per_page
-    return itertools.islice(enumerate(items), min_index, max_index)
+st.header('Car Filter Menu')
 
+# Fetch the initial data, limiting to 50 rows
+query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT 50"
+df = pd.read_sql_query(query, con)
 
-def main():
-    con = sf.connect(
-        user=st.secrets["snowflake"]["user"],
-        password=st.secrets["snowflake"]["password"],
-        account=st.secrets["snowflake"]["account"],
-        warehouse=st.secrets["snowflake"]["warehouse"],
-        database=st.secrets["snowflake"]["database"],
-        schema=st.secrets["snowflake"]["schema"]
-    )
+# Define the current position of the query
+current_position = 0
 
-    st.title('My Parents New Healthy Diner')
+# Define the pagination parameters
+rows_per_page = st.slider("Rows per page", 10, 50, 10)
 
-    st.header('Car Filter Menu')
-
-    # Fetch all the data, instead of limiting to 50
-    query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
+# Function to fetch the next 50 rows
+def fetch_next_rows():
+    nonlocal current_position
+    current_position += rows_per_page
+    query = f"SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT {rows_per_page} OFFSET {current_position}"
     df = pd.read_sql_query(query, con)
+    return df
 
-    # Let user define filtering conditions
-    price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())))
-    mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())))
-    transmission = st.selectbox("Transmission type", df["TRANSMISSION"].unique())
-    fuel_type = st.selectbox("Fuel type", df["FUEL_TYPE"].unique())
+# Function to fetch the previous 50 rows
+def fetch_previous_rows():
+    nonlocal current_position
+    current_position -= rows_per_page
+    if current_position < 0:
+        current_position = 0
+    query = f"SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT {rows_per_page} OFFSET {current_position}"
+    df = pd.read_sql_query(query, con)
+    return df
 
-    # Filter data based on user's conditions
-    df_filtered = df[(df["PRICE"].between(*price_range)) & 
-                     (df["MPG"].between(*mpg_range)) & 
-                     (df["TRANSMISSION"] == transmission) &
-                     (df["FUEL_TYPE"] == fuel_type)]
+# Let user define filtering conditions
+price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())))
+mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())))
+transmission = st.selectbox("Transmission type", df["TRANSMISSION"].unique())
+fuel_type = st.selectbox("Fuel type", df["FUEL_TYPE"].unique())
 
-    # Get the number of rows to display from user
-    rows = st.number_input("Number of rows to display", min_value=10, max_value=len(df_filtered), value=10, step=10)
+# Filter data based on user's conditions
+df_filtered = df[(df["PRICE"].between(*price_range)) & 
+                 (df["MPG"].between(*mpg_range)) & 
+                 (df["TRANSMISSION"] == transmission) &
+                 (df["FUEL_TYPE"] == fuel_type)]
 
-    # Paginate the filtered DataFrame
-    for i, row in paginator("Page", df_filtered.iterrows()):
-        if i >= rows:
-            break
-        st.write(row[1])  # Display the row data
+# Display the number of cars in the current selection
+st.text(f"Number of cars in the selection: {len(df_filtered)}")
+
+# Display the filtered DataFrame, limited to the specified number of rows per page
+st.dataframe(df_filtered.head(rows_per_page))
+
+# Next Page Button
+if st.button("Next Page"):
+    df = fetch_next_rows()
+    st.dataframe(df.head(rows_per_page))
+
+# Previous Page Button
+if st.button("Previous Page"):
+    df = fetch_previous_rows()
+    st.dataframe(df.head(rows_per_page))
+
 
     st.text('🥑🍞 Avocado Toast')
 
