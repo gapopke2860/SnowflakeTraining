@@ -20,7 +20,6 @@ def paginator(label, items, items_per_page=10, on_sidebar=True):
     max_index = min_index + items_per_page
     return itertools.islice(enumerate(items), min_index, max_index)
 
-
 def filters(df):
     # Let user decide whether to apply filtering conditions
     apply_filters = st.checkbox("Apply Filters")
@@ -62,19 +61,28 @@ def filters(df):
         df_filtered = df
 
     return df_filtered
+def select_cars(df):
+    st.header("Select Cars")
 
+    selected_cars = []  # Empty list to store selected car records
 
-def compare_cars(df):
-    st.header("Compare Cars")
+    # Paginate the filtered DataFrame based on the selected number of rows and page number
+    paginated_df = paginator("Page number", df.iterrows(), items_per_page=10)
 
-    selected_cars = []  # Empty list to store selected cars
-
-    # Iterate over each row in the DataFrame
-    for i, row in df.iterrows():
-        # Display car record and checkbox for selection
-        selected = st.checkbox(label=f"Select Car {i}", value=False, key=f"car_{i}")
+    for i, row in paginated_df:
+        # Add a checkbox for each record
+        selected = st.checkbox("", key=f"car_{i}")
         if selected:
-            selected_cars.append(row)  # Append selected car record to the list
+            # Add the selected car to the compare cars list
+            selected_cars.append(row)
+
+        # Display the row data
+        st.write(row)
+
+    return selected_cars
+
+def compare_cars(selected_cars):
+    st.header("Compare Cars")
 
     if len(selected_cars) > 1 and len(selected_cars) <= 4:
         # Create a DataFrame from the selected cars list
@@ -84,8 +92,6 @@ def compare_cars(df):
 
     elif len(selected_cars) > 4:
         st.warning("Please select up to 4 cars for comparison.")
-
-
 
 def main():
     con = sf.connect(
@@ -105,78 +111,10 @@ def main():
     query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
     df = pd.read_sql_query(query, con)
 
-    # Let user decide whether to apply filtering conditions
-    apply_filters = st.checkbox("Apply Filters")
+    df_filtered = filters(df)
 
-    if apply_filters:
-        # Let user define filtering conditions
-        with st.expander("Filter conditions", expanded=True):
-            price_active = st.checkbox("Price range")
-            price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())), key="price_range")
+    selected_cars = select_cars(df_filtered)
 
-            mpg_active = st.checkbox("MPG range")
-            mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())), key="mpg_range")
-
-            transmission_active = st.checkbox("Transmission type")
-            transmission = st.selectbox("Transmission type", [""] + df["TRANSMISSION"].unique(), key="transmission")
-
-            fuel_type_active = st.checkbox("Fuel type")
-            fuel_type = st.selectbox("Fuel type", [""] + df["FUEL_TYPE"].unique(), key="fuel_type")
-
-        # Filter data based on user's conditions
-        df_filtered = df
-
-        if price_active:
-            df_filtered = df_filtered[(df_filtered["PRICE"].between(*price_range))]
-
-        if mpg_active:
-            df_filtered = df_filtered[(df_filtered["MPG"].between(*mpg_range))]
-
-        if transmission_active:
-            df_filtered = df_filtered[(df_filtered["TRANSMISSION"].isin([transmission, ""]))]
-
-        if fuel_type_active:
-            df_filtered = df_filtered[(df_filtered["FUEL_TYPE"].isin([fuel_type, ""]))]
-
-        # Display the number of cars in the current selection
-        st.text(f"Number of cars in the selection: {len(df_filtered)}")
-
-    else:
-        df_filtered = df
-
-    # Get the number of rows to display from user
-    rows = st.number_input("Number of rows to display", min_value=10, max_value=len(df_filtered), value=10, step=10)
-
-    # Calculate the number of pages based on the number of rows and items per page
-    n_pages = (len(df_filtered) - 1) // rows + 1
-
-    # Display the number of pages to the user
-    st.text(f"Number of pages: {n_pages}")
-
-    # Get the starting index of the rows to display
-    page_number = st.number_input("Page number", min_value=1, max_value=n_pages, value=1, step=1)
-
-    # Get the starting index of the rows to display
-    start_index = (page_number - 1) * rows
-
-    # Get the ending index of the rows to display
-    end_index = start_index + rows
-
-    # Paginate the filtered DataFrame based on the selected number of rows and page number
-    paginated_df = df_filtered.iloc[start_index:end_index]
-
-    # Display the paginated DataFrame
-    selected_cars = []  # Empty list to store selected car records
-    for i, row in paginated_df.iterrows():
-        # Add a checkbox for each record
-        selected = st.checkbox("", key=f"car_{i}")
-        if selected:
-            # Add the selected car to the compare cars list
-            selected_cars.append(row)
-
-        # Display the row data
-        st.write(row)
-        
     compare_cars(selected_cars)
 
     st.text('🥑🍞 Avocado Toast')
@@ -205,10 +143,6 @@ def main():
     fruityvice_normalized = pd.json_normalize(fruityvice_response.json())
 
     st.dataframe(fruityvice_normalized)
-
-    # Compare Cars section
-    st.header("Compare Cars")
-    compare_cars(df_filtered)  # Pass the filtered DataFrame to the compare_cars function
 
 
 if __name__ == '__main__':
