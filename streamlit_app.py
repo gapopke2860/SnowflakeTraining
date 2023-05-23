@@ -62,6 +62,19 @@ def filters(df):
 
     return df_filtered
 
+def compare_cars(selected_cars):
+    st.header("Compare Cars")
+
+    if len(selected_cars) > 1 and len(selected_cars) <= 4:
+        # Create a DataFrame from the selected cars list
+        comparison_df = pd.DataFrame(selected_cars)
+        st.subheader("Comparison Result")
+
+        # Display the selected cars using st.dataframe() with the "wide" option
+        st.dataframe(comparison_df, width=0, height=0, scrolling=True)
+    elif len(selected_cars) > 4:
+        st.warning("Please select up to 4 cars for comparison.")
+
 def select_cars(df):
     st.header("Select Cars")
 
@@ -75,26 +88,12 @@ def select_cars(df):
         selected = st.checkbox("", key=f"car_{i}")
         if selected:
             # Add the selected car to the compare cars list
-            selected_cars.append(row)
+            selected_cars.append(row.to_dict())
 
         # Display the row data
         st.write(row)
 
     return selected_cars
-
-
-
-def compare_cars(selected_cars):
-    st.header("Compare Cars")
-
-    if len(selected_cars) > 1 and len(selected_cars) <= 4:
-        # Create a DataFrame from the selected cars list
-        comparison_df = pd.DataFrame(selected_cars)
-        st.subheader("Comparison Result")
-        st.dataframe(comparison_df)
-
-    elif len(selected_cars) > 4:
-        st.warning("Please select up to 4 cars for comparison.")
 
 def main():
     pd.set_option("display.max_columns", None)
