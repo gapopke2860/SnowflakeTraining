@@ -77,8 +77,8 @@ def select_cars(df):
             # Add the selected car to the compare cars list
             selected_cars.append(row)
 
-        # Display the row data in a table-like format
-        st.dataframe(row)
+        # Display the entire record for each car
+        st.write(row)
 
     return selected_cars
 
