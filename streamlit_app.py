@@ -1,8 +1,8 @@
 import streamlit
 import pandas
-import snowflake.connector
+import snowflake.connector as sf
 
-con = connect(
+con = sf.connect(
     user=st.secrets["snowflake"]["user"],
     password=st.secrets["snowflake"]["password"],
     account=st.secrets["snowflake"]["account"],
