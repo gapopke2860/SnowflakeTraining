@@ -11,9 +11,9 @@ con = sf.connect(
     schema=st.secrets["snowflake"]["schema"]
 )
 
-streamlit.title('My Parents New Healthy Diner')
+st.title('My Parents New Healthy Diner')
 
-streamlit.header('Breakfast Menu')
+st.header('Breakfast Menu')
 
 query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT 50"
 df = pd.read_sql_query(query, con)
@@ -21,30 +21,27 @@ df = pd.read_sql_query(query, con)
 # Display the DataFrame in the Streamlit app
 st.dataframe(df)
 
-streamlit.text('🥑🍞 Avocado Toast')
+st.text('🥑🍞 Avocado Toast')
 
-streamlit.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
+st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
 
-my_fruit_list = pandas.read_csv("https://uni-lab-files.s3.us-west-2.amazonaws.com/dabw/fruit_macros.txt")
+my_fruit_list = pd.read_csv("https://uni-lab-files.s3.us-west-2.amazonaws.com/dabw/fruit_macros.txt")
 my_fruit_list = my_fruit_list.set_index('Fruit')
 
-fruits_selected = streamlit.multiselect("Pick some fruits: ", list(my_fruit_list.index), ['Avocado', 'Strawberries'])
+fruits_selected = st.multiselect("Pick some fruits: ", list(my_fruit_list.index), ['Avocado', 'Strawberries'])
 fruits_to_show = my_fruit_list.loc[fruits_selected]
 
-streamlit.dataframe(fruits_to_show)
-
-
+st.dataframe(fruits_to_show)
 
 #fruityvice api section
-streamlit.header('Fruityvice Fruit Advice!')
-fruit_choice = streamlit.text_input('What fruit would you like information about?', 'Kiwi')
-streamlit.write('The user entered', fruit_choice)
+st.header('Fruityvice Fruit Advice!')
+fruit_choice = st.text_input('What fruit would you like information about?', 'Kiwi')
+st.write('The user entered', fruit_choice)
 
 import requests
 fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + fruit_choice)
 
 #normalize json response
-fruityvice_normalized = pandas.json_normalize(fruityvice_response.json())
+fruityvice_normalized = pd.json_normalize(fruityvice_response.json())
 
-streamlit.dataframe(fruityvice_normalized)
-
+st.dataframe(fruityvice_normalized)
