@@ -15,7 +15,8 @@ st.title('My Parents New Healthy Diner')
 
 st.header('Car Filter Menu')
 
-query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT 50"
+# Fetch all the data, instead of limiting to 50
+query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
 df = pd.read_sql_query(query, con)
 
 # Let user define filtering conditions
@@ -30,8 +31,14 @@ df_filtered = df[(df["PRICE"].between(*price_range)) &
                  (df["TRANSMISSION"] == transmission) &
                  (df["FUEL_TYPE"] == fuel_type)]
 
-# Display the filtered DataFrame
-st.dataframe(df_filtered)
+# Get the number of rows to display from user
+rows = st.number_input("Number of rows to display", min_value=10, max_value=50, value=10, step=10)
+
+# Display the number of cars in the current selection
+st.text(f"Number of cars in the selection: {len(df_filtered)}")
+
+# Display the filtered DataFrame, limit the number of rows based on user's input
+st.dataframe(df_filtered.head(rows))
 
 st.text('🥑🍞 Avocado Toast')
 
