@@ -70,11 +70,6 @@ def select_cars(df):
     # Paginate the filtered DataFrame based on the selected number of rows and page number
     paginated_df = paginator("Page number", df.iterrows(), items_per_page=10)
 
-    selected_columns = ["Model", "Year", "Price", "Transmission", "Mileage", "Fuel Type", "Tax", "MPG", "Engine Size", "Brand", "Seats"]
-
-    # Create a new DataFrame to store the selected car records
-    selected_df = pd.DataFrame(columns=selected_columns)
-
     for i, row in paginated_df:
         # Add a checkbox for each record
         selected = st.checkbox("", key=f"car_{i}")
@@ -82,11 +77,8 @@ def select_cars(df):
             # Add the selected car to the compare cars list
             selected_cars.append(row)
 
-            # Append the selected car record to the selected DataFrame
-            selected_df = selected_df.append(row[selected_columns], ignore_index=True)
-
-    # Display the selected car records in a table
-    st.dataframe(selected_df)
+        # Display the row data
+        st.write(row)
 
     return selected_cars
 
