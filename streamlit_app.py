@@ -1,81 +1,90 @@
 import streamlit as st
 import pandas as pd
 import snowflake.connector as sf
+import itertools
 
-class CarDiner:
-    def __init__(self):
-        self.current_position = 0
-        self.rows_per_page = 10
-        self.con = sf.connect(
-            user=st.secrets["snowflake"]["user"],
-            password=st.secrets["snowflake"]["password"],
-            account=st.secrets["snowflake"]["account"],
-            warehouse=st.secrets["snowflake"]["warehouse"],
-            database=st.secrets["snowflake"]["database"],
-            schema=st.secrets["snowflake"]["schema"]
-        )
-        self.container = st.empty()
+# Define the paginator function
+def paginator(label, items, items_per_page=10, on_sidebar=True):
+    """Lets the user paginate a set of items."""
+    if on_sidebar:
+        location = st.sidebar.empty()
+    else:
+        location = st.empty()
 
-    def fetch_next_rows(self):
-        self.current_position += self.rows_per_page
-        query = f"SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT {self.rows_per_page} OFFSET {self.current_position}"
-        df = pd.read_sql_query(query, self.con)
-        return df
+    items = list(items)
+    n_pages = (len(items) - 1) // items_per_page + 1
+    page_format_func = lambda i: f"Page {i+1}"
+    page_number = location.selectbox(label, range(n_pages), format_func=page_format_func)
 
-    def fetch_previous_rows(self):
-        self.current_position -= self.rows_per_page
-        if self.current_position < 0:
-            self.current_position = 0
-        query = f"SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT {self.rows_per_page} OFFSET {self.current_position}"
-        df = pd.read_sql_query(query, self.con)
-        return df
+    min_index = page_number * items_per_page
+    max_index = min_index + items_per_page
+    return itertools.islice(enumerate(items), min_index, max_index)
 
-    def run(self):
-        st.title('My Parents New Healthy Diner')
 
-        st.header('Car Filter Menu')
+def main():
+    con = sf.connect(
+        user=st.secrets["snowflake"]["user"],
+        password=st.secrets["snowflake"]["password"],
+        account=st.secrets["snowflake"]["account"],
+        warehouse=st.secrets["snowflake"]["warehouse"],
+        database=st.secrets["snowflake"]["database"],
+        schema=st.secrets["snowflake"]["schema"]
+    )
 
-        # Fetch the initial data, limiting to 50 rows
-        query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT 50"
-        df = pd.read_sql_query(query, self.con)
+    st.title('My Parents New Healthy Diner')
 
-        # Let user decide whether to apply filtering conditions
-        apply_filters = st.checkbox("Apply Filters")
-        
-        if apply_filters:
-            # Let user define filtering conditions
-            with st.expander("Filter conditions", expanded=True):
-                price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())))
-                mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())))
-                transmission = st.selectbox("Transmission type", df["TRANSMISSION"].unique())
-                fuel_type = st.selectbox("Fuel type", df["FUEL_TYPE"].unique())
-        
-            # Filter data based on user's conditions
-            df_filtered = df[(df["PRICE"].between(*price_range)) & 
-                             (df["MPG"].between(*mpg_range)) & 
-                             (df["TRANSMISSION"] == transmission) &
-                             (df["FUEL_TYPE"] == fuel_type)]
-        else:
-            df_filtered = df
+    st.header('Car Filter Menu')
 
-        # Display the number of cars in the current selection
-        st.text(f"Number of cars in the selection: {len(df_filtered)}")
+    # Fetch all the data, instead of limiting to 50
+    query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
+    df = pd.read_sql_query(query, con)
 
-        # Display the filtered DataFrame, limited to the specified number of rows per page
-        self.container.dataframe(df_filtered.head(self.rows_per_page))
+    # Let user define filtering conditions
+    price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())))
+    mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())))
+    transmission = st.selectbox("Transmission type", df["TRANSMISSION"].unique())
+    fuel_type = st.selectbox("Fuel type", df["FUEL_TYPE"].unique())
 
-        # Next Page Button
-        if st.button("Next Page"):
-            df = self.fetch_next_rows()
-            self.container.empty()
-            self.container.dataframe(df.head(self.rows_per_page))
+    # Filter data based on user's conditions
+    df_filtered = df[(df["PRICE"].between(*price_range)) & 
+                     (df["MPG"].between(*mpg_range)) & 
+                     (df["TRANSMISSION"] == transmission) &
+                     (df["FUEL_TYPE"] == fuel_type)]
 
-        # Previous Page Button
-        if st.button("Previous Page"):
-            df = self.fetch_previous_rows()
-            self.container.empty()
-            self.container.dataframe(df.head(self.rows_per_page))
+    # Get the number of rows to display from user
+    rows = st.number_input("Number of rows to display", min_value=10, max_value=len(df_filtered), value=10, step=10)
 
-if __name__ == "__main__":
-    car_diner = CarDiner()
-    car_diner.run()
+    # Paginate the filtered DataFrame
+    for i, row in paginator("Page", df_filtered.iterrows()):
+        if i >= rows:
+            break
+        st.write(row[1])  # Display the row data
+
+    st.text('🥑🍞 Avocado Toast')
+
+    st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
+
+    my_fruit_list = pd.read_csv("https://uni-lab-files.s3.us-west-2.amazonaws.com/dabw/fruit_macros.txt")
+    my_fruit_list = my_fruit_list.set_index('Fruit')
+
+    fruits_selected = st.multiselect("Pick some fruits: ", list(my_fruit_list.index), ['Avocado', 'Strawberries'])
+    fruits_to_show = my_fruit_list.loc[fruits_selected]
+
+    st.dataframe(fruits_to_show)
+
+    # Fruityvice API section
+    st.header('Fruityvice Fruit Advice!')
+    fruit_choice = st.text_input('What fruit would you like information about?', 'Kiwi')
+    st.write('The user entered', fruit_choice)
+
+    import requests
+    fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + fruit_choice)
+
+    # Normalize JSON response
+    fruityvice_normalized = pd.json_normalize(fruityvice_response.json())
+
+    st.dataframe(fruityvice_normalized)
+
+
+if __name__ == '__main__':
+    main()
