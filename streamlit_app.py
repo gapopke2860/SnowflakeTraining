@@ -67,21 +67,13 @@ def filters(df):
 def compare_cars(df):
     st.header("Compare Cars")
 
-    selected_cars = []  # Empty list to store selected cars
+    cars_to_compare = st.multiselect("Select cars to compare (up to 4)", df.columns, default=[])
 
-    # Iterate over each row in the DataFrame
-    for i, row in df.iterrows():
-        # Display car record and checkbox for selection
-        selected = st.checkbox(label=f"Select Car {i}", value=False)
-        if selected:
-            selected_cars.append(row)  # Append selected car record to the list
-
-    if len(selected_cars) > 1 and len(selected_cars) <= 4:
-        # Create a DataFrame from the selected cars list
-        comparison_df = pd.DataFrame(selected_cars)
+    if len(cars_to_compare) > 1 and len(cars_to_compare) <= 4:
+        comparison_df = df[cars_to_compare]
         st.subheader("Comparison Result")
         st.dataframe(comparison_df)
-    elif len(selected_cars) > 4:
+    elif len(cars_to_compare) > 4:
         st.warning("Please select up to 4 cars for comparison.")
 
 
