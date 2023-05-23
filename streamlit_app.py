@@ -67,7 +67,7 @@ def select_cars(df):
 
     selected_cars = []  # Empty list to store selected car records
 
-    # Paginate the filtered DataFrame based on the selected number of rows and page number
+    # Paginate the DataFrame based on the selected number of rows and page number
     paginated_df = paginator("Page number", df.iterrows(), items_per_page=10)
 
     for i, row in paginated_df:
@@ -75,14 +75,12 @@ def select_cars(df):
         selected = st.checkbox("", key=f"car_{i}")
         if selected:
             # Add the selected car to the compare cars list
-            selected_cars.append(row)
+            selected_cars.append(row[1])  # Append the row values, excluding the index
 
         # Display the row data
-        st.write(row)
+        st.write(row[1])  # Display the row values, excluding the index
 
     return selected_cars
-
-
 
 def compare_cars(selected_cars):
     st.header("Compare Cars")
@@ -95,7 +93,6 @@ def compare_cars(selected_cars):
 
     elif len(selected_cars) > 4:
         st.warning("Please select up to 4 cars for comparison.")
-
 
 def main():
     con = sf.connect(
@@ -111,7 +108,7 @@ def main():
 
     st.header('Car Filter Menu')
 
-    # Fetch all the data, instead of limiting to 50
+    # Fetch all the data from Snowflake database
     query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
     df = pd.read_sql_query(query, con)
 
@@ -122,8 +119,6 @@ def main():
     compare_cars(selected_cars)
 
     st.text('🥑🍞 Avocado Toast')
-
-    st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
 
     st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
 
@@ -147,7 +142,6 @@ def main():
     fruityvice_normalized = pd.json_normalize(fruityvice_response.json())
 
     st.dataframe(fruityvice_normalized)
-
 
 if __name__ == '__main__':
     main()
