@@ -39,17 +39,28 @@ def main():
     query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
     df = pd.read_sql_query(query, con)
 
-    # Let user define filtering conditions
-    price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())))
-    mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())))
-    transmission = st.selectbox("Transmission type", df["TRANSMISSION"].unique())
-    fuel_type = st.selectbox("Fuel type", df["FUEL_TYPE"].unique())
+    # Let user decide whether to apply filtering conditions
+    apply_filters = st.checkbox("Apply Filters")
 
-    # Filter data based on user's conditions
-    df_filtered = df[(df["PRICE"].between(*price_range)) & 
-                     (df["MPG"].between(*mpg_range)) & 
-                     (df["TRANSMISSION"] == transmission) &
-                     (df["FUEL_TYPE"] == fuel_type)]
+    if apply_filters:
+        # Let user define filtering conditions
+        with st.expander("Filter conditions", expanded=True):
+            price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())))
+            mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())))
+            transmission = st.selectbox("Transmission type", [""] + df["TRANSMISSION"].unique())
+            fuel_type = st.selectbox("Fuel type", [""] + df["FUEL_TYPE"].unique())
+
+        # Filter data based on user's conditions
+        df_filtered = df[(df["PRICE"].between(*price_range)) & 
+                         (df["MPG"].between(*mpg_range)) & 
+                         (df["TRANSMISSION"].isin([transmission, ""])) &
+                         (df["FUEL_TYPE"].isin([fuel_type, ""]))]
+
+        # Display the number of cars in the current selection
+        st.text(f"Number of cars in the selection: {len(df_filtered)}")
+
+    else:
+        df_filtered = df
 
     # Get the number of rows to display from user
     rows = st.number_input("Number of rows to display", min_value=10, max_value=len(df_filtered), value=10, step=10)
