@@ -77,8 +77,11 @@ def select_cars(df):
             # Add the selected car to the compare cars list
             selected_cars.append(row)
 
-        # Display the row data
-        st.write(row)
+    # Create a DataFrame from the selected cars list
+    selected_cars_df = pd.DataFrame(selected_cars)
+
+    # Display the DataFrame
+    st.dataframe(selected_cars_df)
 
     return selected_cars
 
