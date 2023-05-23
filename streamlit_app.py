@@ -14,6 +14,7 @@ class CarDiner:
             database=st.secrets["snowflake"]["database"],
             schema=st.secrets["snowflake"]["schema"]
         )
+        self.container = st.empty()
 
     def fetch_next_rows(self):
         self.current_position += self.rows_per_page
@@ -54,17 +55,19 @@ class CarDiner:
         st.text(f"Number of cars in the selection: {len(df_filtered)}")
 
         # Display the filtered DataFrame, limited to the specified number of rows per page
-        st.dataframe(df_filtered.head(self.rows_per_page))
+        self.container.dataframe(df_filtered.head(self.rows_per_page))
 
         # Next Page Button
         if st.button("Next Page"):
             df = self.fetch_next_rows()
-            st.dataframe(df.head(self.rows_per_page))
+            self.container.empty()
+            self.container.dataframe(df.head(self.rows_per_page))
 
         # Previous Page Button
         if st.button("Previous Page"):
             df = self.fetch_previous_rows()
-            st.dataframe(df.head(self.rows_per_page))
+            self.container.empty()
+            self.container.dataframe(df.head(self.rows_per_page))
 
 if __name__ == "__main__":
     car_diner = CarDiner()
