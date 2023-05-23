@@ -165,6 +165,8 @@ def main():
 
         # Display the row data
         st.write(row)
+        
+    compare_cars(selected_cars)
 
     st.text('🥑🍞 Avocado Toast')
 
