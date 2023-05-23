@@ -64,13 +64,19 @@ def filters(df):
     return df_filtered
 
 
-def compare_cars(selected_cars):
+def compare_cars(df):
     st.header("Compare Cars")
 
-    if not selected_cars:
-        st.info("No cars selected. Please select at least one car.")
+    selected_cars = []  # Empty list to store selected cars
 
-    elif len(selected_cars) > 1 and len(selected_cars) <= 4:
+    # Iterate over each row in the DataFrame
+    for i, row in df.iterrows():
+        # Display car record and checkbox for selection
+        selected = st.checkbox(label=f"Select Car {i}", value=False, key=f"car_{i}")
+        if selected:
+            selected_cars.append(row)  # Append selected car record to the list
+
+    if len(selected_cars) > 1 and len(selected_cars) <= 4:
         # Create a DataFrame from the selected cars list
         comparison_df = pd.DataFrame(selected_cars)
         st.subheader("Comparison Result")
@@ -78,6 +84,7 @@ def compare_cars(selected_cars):
 
     elif len(selected_cars) > 4:
         st.warning("Please select up to 4 cars for comparison.")
+
 
 
 def main():
