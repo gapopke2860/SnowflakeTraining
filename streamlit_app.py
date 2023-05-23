@@ -97,6 +97,8 @@ def compare_cars(selected_cars):
         st.warning("Please select up to 4 cars for comparison.")
 
 def main():
+    pd.set_option("display.max_columns", None)
+    
     con = sf.connect(
         user=st.secrets["snowflake"]["user"],
         password=st.secrets["snowflake"]["password"],
