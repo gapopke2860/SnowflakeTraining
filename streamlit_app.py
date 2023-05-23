@@ -84,6 +84,7 @@ def compare_cars(df):
     elif len(selected_cars) > 4:
         st.warning("Please select up to 4 cars for comparison.")
 
+
 def main():
     con = sf.connect(
         user=st.secrets["snowflake"]["user"],
