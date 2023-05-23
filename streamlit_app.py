@@ -21,24 +21,7 @@ def paginator(label, items, items_per_page=10, on_sidebar=True):
     return itertools.islice(enumerate(items), min_index, max_index)
 
 
-def main():
-    con = sf.connect(
-        user=st.secrets["snowflake"]["user"],
-        password=st.secrets["snowflake"]["password"],
-        account=st.secrets["snowflake"]["account"],
-        warehouse=st.secrets["snowflake"]["warehouse"],
-        database=st.secrets["snowflake"]["database"],
-        schema=st.secrets["snowflake"]["schema"]
-    )
-
-    st.title('My Parents New Healthy Diner')
-
-    st.header('Car Filter Menu')
-
-    # Fetch all the data, instead of limiting to 50
-    query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
-    df = pd.read_sql_query(query, con)
-
+def filters(df):
     # Let user decide whether to apply filtering conditions
     apply_filters = st.checkbox("Apply Filters")
 
@@ -78,6 +61,40 @@ def main():
     else:
         df_filtered = df
 
+    return df_filtered
+
+
+def compare_cars(df):
+    cars_to_compare = st.multiselect("Select cars to compare (up to 4)", df.columns, default=[])
+
+    if len(cars_to_compare) > 1 and len(cars_to_compare) <= 4:
+        comparison_df = df[cars_to_compare]
+        st.subheader("Comparison Result")
+        st.dataframe(comparison_df)
+    elif len(cars_to_compare) > 4:
+        st.warning("Please select up to 4 cars for comparison.")
+
+
+def main():
+    con = sf.connect(
+        user=st.secrets["snowflake"]["user"],
+        password=st.secrets["snowflake"]["password"],
+        account=st.secrets["snowflake"]["account"],
+        warehouse=st.secrets["snowflake"]["warehouse"],
+        database=st.secrets["snowflake"]["database"],
+        schema=st.secrets["snowflake"]["schema"]
+    )
+
+    st.title('My Parents New Healthy Diner')
+
+    st.header('Car Filter Menu')
+
+    # Fetch all the data, instead of limiting to 50
+    query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
+    df = pd.read_sql_query(query, con)
+
+    df_filtered = filters(df)  # Apply filters and get the filtered DataFrame
+
     # Get the number of rows to display from user
     rows = st.number_input("Number of rows to display", min_value=10, max_value=len(df_filtered), value=10, step=10)
 
@@ -88,8 +105,8 @@ def main():
     st.text(f"Number of pages: {n_pages}")
 
     # Get the starting index of the rows to display
-    page_number = st.number_input("Page number", min_value=1, max_value=n_pages, value=1, step=1)  # Add this line
-    
+    page_number = st.number_input("Page number", min_value=1, max_value=n_pages, value=1, step=1)
+
     # Get the starting index of the rows to display
     start_index = (page_number - 1) * rows
 
@@ -130,15 +147,8 @@ def main():
 
     # Compare Cars section
     st.header("Compare Cars")
+    compare_cars(df_filtered)  # Pass the filtered DataFrame to the compare_cars function
 
-    cars_to_compare = st.multiselect("Select cars to compare (up to 4)", df.columns, default=[])
-
-    if len(cars_to_compare) > 1 and len(cars_to_compare) <= 4:
-        comparison_df = df[cars_to_compare]
-        st.subheader("Comparison Result")
-        st.dataframe(comparison_df)
-    elif len(cars_to_compare) > 4:
-        st.warning("Please select up to 4 cars for comparison.")
 
 if __name__ == '__main__':
     main()
