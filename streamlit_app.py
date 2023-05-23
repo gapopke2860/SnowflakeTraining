@@ -13,21 +13,25 @@ con = sf.connect(
 
 st.title('My Parents New Healthy Diner')
 
-st.header('Breakfast Menu')
+st.header('Car Filter Menu')
 
 query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET LIMIT 50"
 df = pd.read_sql_query(query, con)
 
-# Let user select columns
-features = df.columns.tolist()
-features_selected = st.multiselect("Select car features: ", features, default=features)
+# Let user define filtering conditions
+price_range = st.slider("Price range", float(df["price"].min()), float(df["price"].max()), (float(df["price"].min()), float(df["price"].max())))
+mpg_range = st.slider("MPG range", float(df["mpg"].min()), float(df["mpg"].max()), (float(df["mpg"].min()), float(df["mpg"].max())))
+transmission = st.selectbox("Transmission type", df["transmission"].unique())
+fuel_type = st.selectbox("Fuel type", df["fuel_type"].unique())
 
-# Filter dataframe based on selected columns
-df_filtered = df[features_selected]
+# Filter data based on user's conditions
+df_filtered = df[(df["price"].between(*price_range)) & 
+                 (df["mpg"].between(*mpg_range)) & 
+                 (df["transmission"] == transmission) &
+                 (df["fuel_type"] == fuel_type)]
 
-# Display the DataFrame in the Streamlit app
+# Display the filtered DataFrame
 st.dataframe(df_filtered)
-
 st.text('🥑🍞 Avocado Toast')
 
 st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
