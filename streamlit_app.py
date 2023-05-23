@@ -87,9 +87,6 @@ def main():
     # Display the number of pages to the user
     st.text(f"Number of pages: {n_pages}")
 
-    # Get the page number from the user
-    page_number = st.sidebar.selectbox("Page number", range(1, n_pages+1))
-
     # Get the starting index of the rows to display
     start_index = (page_number - 1) * rows
 
@@ -128,6 +125,16 @@ def main():
 
     st.dataframe(fruityvice_normalized)
 
+    # Compare Cars section
+    st.header("Compare Cars")
+
+    cars_to_compare = st.multiselect("Select cars to compare (up to 4)", df['CAR_NAME'], default=[])
+    if len(cars_to_compare) > 1 and len(cars_to_compare) <= 4:
+        comparison_df = df[df['CAR_NAME'].isin(cars_to_compare)]
+        st.subheader("Comparison Result")
+        st.dataframe(comparison_df)
+    elif len(cars_to_compare) > 4:
+        st.warning("Please select up to 4 cars for comparison.")
 
 if __name__ == '__main__':
     main()
