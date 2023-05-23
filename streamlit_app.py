@@ -1,66 +1,90 @@
 import streamlit as st
 import pandas as pd
 import snowflake.connector as sf
+import itertools
 
-con = sf.connect(
-    user=st.secrets["snowflake"]["user"],
-    password=st.secrets["snowflake"]["password"],
-    account=st.secrets["snowflake"]["account"],
-    warehouse=st.secrets["snowflake"]["warehouse"],
-    database=st.secrets["snowflake"]["database"],
-    schema=st.secrets["snowflake"]["schema"]
-)
+# Define the paginator function
+def paginator(label, items, items_per_page=10, on_sidebar=True):
+    """Lets the user paginate a set of items."""
+    if on_sidebar:
+        location = st.sidebar.empty()
+    else:
+        location = st.empty()
 
-st.title('My Parents New Healthy Diner')
+    items = list(items)
+    n_pages = (len(items) - 1) // items_per_page + 1
+    page_format_func = lambda i: f"Page {i+1}"
+    page_number = location.selectbox(label, range(n_pages), format_func=page_format_func)
 
-st.header('Car Filter Menu')
+    min_index = page_number * items_per_page
+    max_index = min_index + items_per_page
+    return itertools.islice(enumerate(items), min_index, max_index)
 
-# Fetch all the data, instead of limiting to 50
-query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
-df = pd.read_sql_query(query, con)
 
-# Let user define filtering conditions
-price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())))
-mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())))
-transmission = st.selectbox("Transmission type", df["TRANSMISSION"].unique())
-fuel_type = st.selectbox("Fuel type", df["FUEL_TYPE"].unique())
+def main():
+    con = sf.connect(
+        user=st.secrets["snowflake"]["user"],
+        password=st.secrets["snowflake"]["password"],
+        account=st.secrets["snowflake"]["account"],
+        warehouse=st.secrets["snowflake"]["warehouse"],
+        database=st.secrets["snowflake"]["database"],
+        schema=st.secrets["snowflake"]["schema"]
+    )
 
-# Filter data based on user's conditions
-df_filtered = df[(df["PRICE"].between(*price_range)) & 
-                 (df["MPG"].between(*mpg_range)) & 
-                 (df["TRANSMISSION"] == transmission) &
-                 (df["FUEL_TYPE"] == fuel_type)]
+    st.title('My Parents New Healthy Diner')
 
-# Get the number of rows to display from user
-rows = st.number_input("Number of rows to display", min_value=10, max_value=50, value=10, step=10)
+    st.header('Car Filter Menu')
 
-# Display the number of cars in the current selection
-st.text(f"Number of cars in the selection: {len(df_filtered)}")
+    # Fetch all the data, instead of limiting to 50
+    query = "SELECT * FROM DEMO_DB.PUBLIC.CARS_DATASET"
+    df = pd.read_sql_query(query, con)
 
-# Display the filtered DataFrame, limit the number of rows based on user's input
-st.dataframe(df_filtered.head(rows))
+    # Let user define filtering conditions
+    price_range = st.slider("Price range", float(df["PRICE"].min()), float(df["PRICE"].max()), (float(df["PRICE"].min()), float(df["PRICE"].max())))
+    mpg_range = st.slider("MPG range", float(df["MPG"].min()), float(df["MPG"].max()), (float(df["MPG"].min()), float(df["MPG"].max())))
+    transmission = st.selectbox("Transmission type", df["TRANSMISSION"].unique())
+    fuel_type = st.selectbox("Fuel type", df["FUEL_TYPE"].unique())
 
-st.text('🥑🍞 Avocado Toast')
+    # Filter data based on user's conditions
+    df_filtered = df[(df["PRICE"].between(*price_range)) & 
+                     (df["MPG"].between(*mpg_range)) & 
+                     (df["TRANSMISSION"] == transmission) &
+                     (df["FUEL_TYPE"] == fuel_type)]
 
-st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
+    # Get the number of rows to display from user
+    rows = st.number_input("Number of rows to display", min_value=10, max_value=len(df_filtered), value=10, step=10)
 
-my_fruit_list = pd.read_csv("https://uni-lab-files.s3.us-west-2.amazonaws.com/dabw/fruit_macros.txt")
-my_fruit_list = my_fruit_list.set_index('Fruit')
+    # Paginate the filtered DataFrame
+    for i, row in paginator("Page", df_filtered.iterrows()):
+        if i >= rows:
+            break
+        st.write(row[1])  # Display the row data
 
-fruits_selected = st.multiselect("Pick some fruits: ", list(my_fruit_list.index), ['Avocado', 'Strawberries'])
-fruits_to_show = my_fruit_list.loc[fruits_selected]
+    st.text('🥑🍞 Avocado Toast')
 
-st.dataframe(fruits_to_show)
+    st.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
 
-#fruityvice api section
-st.header('Fruityvice Fruit Advice!')
-fruit_choice = st.text_input('What fruit would you like information about?', 'Kiwi')
-st.write('The user entered', fruit_choice)
+    my_fruit_list = pd.read_csv("https://uni-lab-files.s3.us-west-2.amazonaws.com/dabw/fruit_macros.txt")
+    my_fruit_list = my_fruit_list.set_index('Fruit')
 
-import requests
-fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + fruit_choice)
+    fruits_selected = st.multiselect("Pick some fruits: ", list(my_fruit_list.index), ['Avocado', 'Strawberries'])
+    fruits_to_show = my_fruit_list.loc[fruits_selected]
 
-#normalize json response
-fruityvice_normalized = pd.json_normalize(fruityvice_response.json())
+    st.dataframe(fruits_to_show)
 
-st.dataframe(fruityvice_normalized)
+    # Fruityvice API section
+    st.header('Fruityvice Fruit Advice!')
+    fruit_choice = st.text_input('What fruit would you like information about?', 'Kiwi')
+    st.write('The user entered', fruit_choice)
+
+    import requests
+    fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + fruit_choice)
+
+    # Normalize JSON response
+    fruityvice_normalized = pd.json_normalize(fruityvice_response.json())
+
+    st.dataframe(fruityvice_normalized)
+
+
+if __name__ == '__main__':
+    main()
