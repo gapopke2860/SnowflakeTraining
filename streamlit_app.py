@@ -81,6 +81,12 @@ def main():
     # Get the number of rows to display from user
     rows = st.number_input("Number of rows to display", min_value=10, max_value=len(df_filtered), value=10, step=10)
 
+    # Calculate the number of pages based on the number of rows and items per page
+    n_pages = (len(df_filtered) - 1) // rows + 1
+
+    # Display the number of pages to the user
+    st.text(f"Number of pages: {n_pages}")
+    
     # Paginate the filtered DataFrame
     for i, row in paginator("Page", df_filtered.iterrows()):
         if i >= rows:
